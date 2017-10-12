@@ -1,6 +1,4 @@
-var scheduleMeasures = "schedule_measures.scd".loadRelative[0],
-stop,
-testMeasures;
+var scheduleMeasures = "schedule_measures.scd".loadRelative[0];
 
 SynthDef(\ping, {
   Out.ar(
@@ -12,20 +10,19 @@ SynthDef(\ping, {
   );
 }).load(s);
 
-testMeasures = [
+~stop = scheduleMeasures.value([
   (bpm: 120, bpb: 4, children: [
-    (run: { 1.postln; Synth(\ping) }, beat: 1),
-    (run: { 2.postln; Synth(\ping) }, beat: 2),
-    (run: { 3.postln; Synth(\ping) }, beat: 3),
-    (run: { 4.postln; Synth(\ping) }, beat: 4),
+    (run: { Synth(\ping) }, beat: 1),
+    (run: { Synth(\ping) }, beat: 2),
+    (run: { Synth(\ping) }, beat: 3),
+    (run: { Synth(\ping) }, beat: 4),
   ]),
   (children: [
-    (run: { 5.postln; Synth(\ping) }, beat: 1),
-    (run: { 6.postln; Synth(\ping) }, beat: 2),
-    (run: { 7.postln; Synth(\ping) }, beat: 3),
-    (run: { 8.postln; Synth(\ping) }, beat: 4),
+    (run: { Synth(\ping) }, beat: 1),
+    (run: { Synth(\ping) }, beat: 2),
+    (run: { Synth(\ping) }, beat: 3),
+    (run: { Synth(\ping) }, beat: 4),
   ])
-];
+]);
 
-~stop = scheduleMeasures.value(testMeasures);
 ~stop.value;
