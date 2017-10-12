@@ -5,9 +5,17 @@
   var keepPlaying = true;
   var stopPlaying = { keepPlaying = false };
 
+  if (firstMeasure.bpm.isNil) {
+    Error("first measure must specify bpm").throw;
+  };
+
+  if (firstMeasure.bpb.isNil) {
+    Error("first measure must specify bpb").throw;
+  };
+
   clock.sched(0, {
     // must be set inside scheduling thread
-    clock.beatsPerBar = firstMeasure.bpm;
+    clock.beatsPerBar = firstMeasure.bpb;
     clock.tempo = firstMeasure.bpm / 60;
 
     // schedule each measure one beat before it begins
@@ -16,8 +24,14 @@
       var wakeUpIn;
 
       if (keepPlaying) {
-        measure.children.do { |child|
-          s.makeBundle(child.beat * clock.beatDur, child[\run]);
+        measure.events.do { |event|
+          if (event[\run].notNil) {
+            if (event.beat.isNil) {
+              ("No beat specified for " + event).warn;
+            } {
+              s.makeBundle(event.beat * clock.beatDur, { event.use(event[\run]) });
+            };
+          };
         };
 
         if (currentMeasureIndex < measures.size) {
