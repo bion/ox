@@ -1,48 +1,45 @@
-var resolveEnvs = "resolve_envs.scd".loadRelative[0];
-var scheduleMeasures = "schedule_measures.scd".loadRelative[0];
+var score, dandanSpec;
 
-SynthDef(\ping, {
-  Out.ar(
-    [0, 1],
-    SinOsc.ar.tanh * 0.2 * EnvGen.kr(
-      Env([0, 1, 0], [0.01, 0.45], \sin),
-      doneAction: 2
-    ) * 0
-  );
-}).load(s);
+"synth_def_support.scd".loadRelative;
+"synth_defs.scd".loadRelative;
 
-SynthDef(\pong, {
-  Out.ar(
-    [0, 1],
-    SinOsc.ar.tanh * 0.2 * EnvGen.kr(
-      Control.names([\env]).kr(Env.newClear(64)),
-      doneAction: 2
+~quiet = -60.dbamp;
+~resolveEnvs = "resolve_envs.scd".loadRelative[0];
+~scheduleMeasures = "schedule_measures.scd".loadRelative[0];
+
+a = (
+  outBus: 0,
+  amp: 0.2,
+  pPos: 0,
+  pSpread: 1,
+  freq: 220,
+  envBuf: ~synthDefSupport[\sin_buf_1],
+  run: {
+    Synth(
+      \dandan,
+      [
+        outBus: ~outBus,
+        amp: ~amp,
+        pPos: ~pPos,
+        pSpread: ~pSpread,
+        freq: ~freq,
+        envBuf: ~envBuf,
+        env: ~env
+      ]
     )
-  );
-}).load(s);
-
-~stop = scheduleMeasures.value(
-  resolveEnvs.value([
-    (bpm: 120, bpb: 4, events: [
-      (name: \foo, run: {
-        ~thing.postln;
-        Synth(\pong, [\env, ~thing.asArray])
-      }, envs: (thing: -24.dbamp), beat: 1),
-      (run: { 1.postln; Synth(\ping) }, beat: 1),
-      (run: { 2.postln; Synth(\ping) }, beat: 2),
-      (run: { 3.postln; Synth(\ping) }, beat: 3),
-      (name: \foo, env: \thing, curve: \exp, val: 1, beat: 3),
-      (run: { 4.postln; Synth(\ping) }, beat: 4),
-    ]),
-
-    (events: [
-      (run: { 5.postln; Synth(\ping) }, beat: 1),
-      (run: { 6.postln; Synth(\ping) }, beat: 2),
-      (run: { 7.postln; Synth(\ping) }, beat: 3),
-      (name: \foo, env: \thing, curve: \exp, val: -24.dbamp, beat: 3),
-      (run: { 8.postln; Synth(\ping) }, beat: 4),
-    ])
-  ]);
+  }
 );
 
-// CmdPeriod.run
+b = ~resolveEnvs.value([
+  (
+    bpm: 100, bpb: 4, events: [
+      a.merge((
+        env: Env([~quiet, 1, ~quiet], [2, 2], \exp),
+        beat: 1
+      ))
+    ]
+  ),
+  (events: [])
+]);
+
+~stop = ~scheduleMeasures.value(b);
