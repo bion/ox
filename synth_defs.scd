@@ -1,6 +1,4 @@
 var synthDefs = [
-  /* --------------------------- main -------------------------------- */
-
   SynthDef(\v_control, {
     arg outbus, amp;
     var off = amp > 2;
@@ -142,8 +140,8 @@ var synthDefs = [
 
   /* ------------------------ sources --------------------------- */
 
-  SynthDef(\dandan, {
-    |outBus, amp, pPos, pSpread, freq, envBuf, freqMul,
+  SynthDef(\ddsynth, {
+    |outBus, amp, pPos, pSpread, freq, envBuf, freqMul = 1,
     dur, trigLFOfreq = 0.2, trigOverlap = 3.5,
     trigLFOrange = 20, trigLFOMul, gp = 0.12,
     vibeRate = 6.5, vibeWidth = 0.0125,
@@ -158,87 +156,92 @@ var synthDefs = [
     rand = LFNoise1.kr(1/6.5, vibwth);
     vib = vibosc + rand + 1;
 
-    trig = Impulse.kr(
-      (gp.reciprocal * trigOverlap) * (
-        LFNoise2.kr(trigLFOfreq).range(
-          trigLFOrange / 2 * 0.01.neg,
-          trigLFOrange / 2 * 0.01
-        ) * trigLFOMul + 1
-      )
-    );
+    trig = (gp.reciprocal * trigOverlap) * 1;
+
+    trig = Impulse.kr(trig);
 
     pan = (TRand.kr(-1, 1, trig) * pSpread) + pPos;
 
     index = LFNoise2.kr(indexLFOfreq).range(indexLFOlo, indexLFOhi);
 
-    harmAmps = Control.names(\harmAmpArray).kr(7.collect { 0 });
+    harmAmps = Control.names(\harmAmpArray).kr(7.collect { 1 });
     harmAmpLFOs = 7.collect { LFNoise2.kr(harmLFOfreq).range(harmLFOlo.dbamp, 1) };
 
-    grains = GrainFM.ar(2, trig, gp,
-      freq * vib * (1 .. 7) * freqMul,
-      freq * vib * (1 .. 7) * freqMul, index,
-      pan, envBuf, 128,
-      harmAmps * harmAmpLFOs ).mean;
+    grains = GrainFM.ar(
+      numChannels: 2,
+      trigger: trig,
+      dur: gp,
+      carfreq: freq * vib * (1 .. 7) * freqMul,
+      modfreq: freq * vib * (1 .. 7) * freqMul,
+      index: index,
+      pan: pan,
+      envbufnum: envBuf,
+      maxGrains: 128,
+      mul: harmAmps * harmAmpLFOs
+    ).mean;
 
     grains = LeakDC.ar(grains);
-    env = Control.names([\env]).kr(Env.newClear(64));
+
+    env = EnvGen.kr(Control.names([\env]).kr(Env.newClear(64)));
+
     sig = env * amp * grains;
+
     Out.ar(outBus, sig);
     DetectSilence.ar(sig, doneAction: 2);
   }),
 
   /* ------------------------ com --------------------------- */
 
-  SynthDef(\com_dandan, {
-    arg bus, amp, gate = 1, freqLagParam = 0.03, beatDur=1,
-    gp = 0.12, envBuf, harm_amp_lag = 0.2, index = 0.01, vibwth = 0.005;
+  // SynthDef(\com_ddsynth, {
+  //   arg bus, amp, gate = 1, freqLagParam = 0.03, beatDur=1,
+  //   gp = 0.12, envBuf, harm_amp_lag = 0.2, index = 0.01, vibwth = 0.005;
 
-    var sig, harmAmps, freqs, silencers, freqLag,
-    vib, rand, vibosc, vibeRate = 6.5,
-    trigLFOfreq = 0.25, trigLFOMul = 1.5, trigLFOrange = 20, trigOverlap = 3.5;
+  //   var sig, harmAmps, freqs, silencers, freqLag,
+  //   vib, rand, vibosc, vibeRate = 6.5,
+  //   trigLFOfreq = 0.25, trigLFOMul = 1.5, trigLFOrange = 20, trigOverlap = 3.5;
 
-    envBuf = ~synthDefSupport[\sin_buf_1];
+  //   envBuf = ~synthDefSupport[\sin_buf_1];
 
-    freqLag = freqLagParam * beatDur;
+  //   freqLag = freqLagParam * beatDur;
 
-    freqs = \freqs.kr(Array.fill(10, {1})).lag(freqLag);
-    silencers = freqs.collect { |freq| freq > 9.0; };
+  //   freqs = \freqs.kr(Array.fill(10, {1})).lag(freqLag);
+  //   silencers = freqs.collect { |freq| freq > 9.0; };
 
-    vibosc = SinOsc.kr(vibeRate + LFDNoise3.kr(2).range(0.9, 1.1), 0, vibwth);
-    rand = LFNoise1.kr(1/6.5, vibwth);
-    vib = vibosc + rand + 1;
+  //   vibosc = SinOsc.kr(vibeRate + LFDNoise3.kr(2).range(0.9, 1.1), 0, vibwth);
+  //   rand = LFNoise1.kr(1/6.5, vibwth);
+  //   vib = vibosc + rand + 1;
 
-    harmAmps = \harmAmpArray.kr(7.collect { 0 }).lag(harm_amp_lag);
+  //   harmAmps = \harmAmpArray.kr(7.collect { 0 }).lag(harm_amp_lag);
 
-    sig = freqs.collect({
-      arg freq, i;
-      var trig;
+  //   sig = freqs.collect({
+  //     arg freq, i;
+  //     var trig;
 
-      trig = Impulse.kr(
-        (gp.reciprocal * trigOverlap) * (
-          LFNoise2.kr(trigLFOfreq)
-          .range(trigLFOrange / 2 * 0.01.neg, trigLFOrange / 2 * 0.01)
-          * trigLFOMul + 1
-        )
-      );
+  //     trig = Impulse.kr(
+  //       (gp.reciprocal * trigOverlap) * (
+  //         LFNoise2.kr(trigLFOfreq)
+  //         .range(trigLFOrange / 2 * 0.01.neg, trigLFOrange / 2 * 0.01)
+  //         * trigLFOMul + 1
+  //       )
+  //     );
 
-      GrainFM.ar(
-        numChannels: 1,
-        trigger: trig,
-        dur: gp,
-        carfreq: freq * vib * (1 .. 7),
-        modfreq: freq * vib * (1 .. 7),
-        index: index,
-        pan: 0,
-        envbufnum: envBuf,
-        maxGrains: 128,
-        mul: harmAmps * silencers[i]
-      ).sum;
-    }).mean * 0.0125;
+  //     GrainFM.ar(
+  //       numChannels: 1,
+  //       trigger: trig,
+  //       dur: gp,
+  //       carfreq: freq * vib * (1 .. 7),
+  //       modfreq: freq * vib * (1 .. 7),
+  //       index: index,
+  //       pan: 0,
+  //       envbufnum: envBuf,
+  //       maxGrains: 128,
+  //       mul: harmAmps * silencers[i]
+  //     ).sum;
+  //   }).mean * 0.0125;
 
-    sig = LeakDC.ar(sig).softclip * amp;
-    Out.ar(bus, sig * Linen.kr(gate, 0.05, releaseTime: 0.05, doneAction: 2));
-  }),
+  //   sig = LeakDC.ar(sig).softclip * amp;
+  //   Out.ar(bus, sig * Linen.kr(gate, 0.05, releaseTime: 0.05, doneAction: 2));
+  // }),
 
   SynthDef(\com_fank, {
     arg bus, amp, vib_rate = 11, freqLagParam = 0.03, beatDur=1, vib_width = 0.00125, gate=1;
@@ -418,8 +421,7 @@ var synthDefs = [
   SynthDef(\mouse_x_out, {|outbus, lo, hi, warp=0| Out.kr(outbus, MouseX.kr(lo, hi, warp))}),
 
   SynthDef(\control_stub, {|bus, value| Out.kr(bus, value) })
-].flat.do(_.add);
+].flat.do { |sd| sd.add; };
 
 "synth defs loaded".postln;
-
-synthDefs;
+nil;
