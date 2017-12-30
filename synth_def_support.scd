@@ -20,6 +20,17 @@
       wavetable: 1
     ).load,
 
+  \expodec_buf_1 -> CtkBuffer
+    .new(size:1024)
+    .fillWithEnv(env:
+      Env(
+        [0, 1, 0],
+        [0.95, 0.05],
+        \sin
+      ),
+      wavetable: 1
+    ).load,
+
   \sin_buf_1 -> CtkBuffer
     .new(size:1024)
     .fillWithEnv(env:

@@ -144,7 +144,7 @@ var synthDefs = [
     |outBus, amp, pPos, pSpread, freq, envBuf, freqMul = 1,
     dur, trigLFOfreq = 0.2, trigOverlap = 3.5,
     trigLFOrange = 20, trigLFOMul, gp = 0.12,
-    vibeRate = 6.5, vibeWidth = 0.0125,
+    vibeRate = 6.5, vibeWidth = 0.01,
     harmLFOfreq = 0.5, harmLFOlo = -0.01,
     indexLFOfreq = 0.2, indexLFOlo = 0.5, indexLFOhi = 5|
     var grains, trig, pan, index, harmAmpLFOs, harmAmps,
@@ -152,7 +152,7 @@ var synthDefs = [
 
     vibamp = EnvGen.kr(Env([0.001, 1], [0.6], \exp));
     vibwth = vibeWidth * vibamp;
-    vibosc = SinOsc.kr(vibeRate + LFDNoise3.kr(2).range(0.9, 1.1), 0, vibwth);
+    vibosc = SinOsc.kr(vibeRate, 0, vibwth);
     rand = LFNoise1.kr(1/6.5, vibwth);
     vib = vibosc + rand + 1;
 

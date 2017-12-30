@@ -1,5 +1,5 @@
-var resolveEnvs = "resolve_envs.scd".loadRelative[0];
-var scheduleMeasures = "schedule_measures.scd".loadRelative[0];
+~resolveEnvs = "resolve_envs.scd".loadRelative[0];
+~scheduleMeasures = "schedule_measures.scd".loadRelative[0];
 
 SynthDef(\ping, {
   Out.ar(
@@ -21,8 +21,8 @@ SynthDef(\pong, {
   );
 }).load(s);
 
-~stop = scheduleMeasures.value(
-  resolveEnvs.value([
+~stop = ~scheduleMeasures.value(
+  ~resolveEnvs.value([
     (bpm: 120, bpb: 4, events: [
       (name: \foo, run: {
         ~thing.postln;
