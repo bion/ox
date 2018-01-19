@@ -1,9 +1,21 @@
-{ |measures|
+{ |channels, measures|
   var clock = TempoClock.new;
   var firstMeasure = measures.first;
   var currentMeasureIndex = 0;
   var keepPlaying = true;
-  var stopPlaying = { keepPlaying = false };
+  var stopPlaying;
+  var cleanupDone = false;
+
+  channels = channels ? IdentityDictionary[];
+
+  stopPlaying = {
+    CmdPeriod.run;
+
+    channels.values.do { |channel| channel.finish.value };
+
+    keepPlaying = false;
+    cleanupDone = true;
+  };
 
   if (firstMeasure.bpm.isNil) {
     Error("first measure must specify bpm").throw;
@@ -12,6 +24,10 @@
   if (firstMeasure.bpb.isNil) {
     Error("first measure must specify bpb").throw;
   };
+
+   channels.values.do { |channel|
+     channel.start.value;
+   };
 
   clock.sched(0, {
     // must be set inside scheduling thread
@@ -24,12 +40,18 @@
       var wakeUpIn;
 
       if (keepPlaying) {
-        measure.events.do { |event|
+        measure.events.flatten.do { |event|
           if (event[\run].notNil) {
             if (event.beat.isNil) {
               ("No beat specified for " + event).warn;
             } {
-              s.makeBundle(event.beat * clock.beatDur, { event.use(event[\run]) });
+              if (channels[event[\name]].notNil) {
+                event.outBus = channels[event[\name]].bus;
+              };
+
+              s.makeBundle(event.beat * clock.beatDur, {
+                event.use(event[\run]);
+              });
             };
           };
         };
@@ -38,6 +60,7 @@
           wakeUpIn = measure.bpb;
         } {
           wakeUpIn = nil;
+          stopPlaying.value;
         };
       };
 

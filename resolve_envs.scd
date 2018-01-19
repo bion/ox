@@ -42,7 +42,8 @@ prepareEnvs = { |event|
           allEnvelopes[event.name] = prepareEnvs.value(event);
         },
         \curveNode, {
-          var eventEnvs, env;
+          var eventEnvs, env, beat;
+          beat = event.beat ? 1;
 
           eventEnvs = allEnvelopes[event.name];
           eventEnvs ?? { Error("No initial event for: " + event.name).throw };
@@ -50,7 +51,7 @@ prepareEnvs = { |event|
           env ?? { Error("No initial value for env: " + event.env).throw };
 
           env.levels.add(event.val);
-          env.times.add(beatDur * (event.beat - 1) + currentMeasureStartTime);
+          env.times.add(beatDur * (beat - 1) + currentMeasureStartTime);
           env.curves.add(event.curve);
         };
       );

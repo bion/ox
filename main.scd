@@ -6,69 +6,164 @@
 
 "synth_def_support.scd".loadRelative;
 "synth_defs.scd".loadRelative;
+"keyboard.scd".loadRelative;
 
 ~quiet = -60.dbamp;
 ~resolveEnvs = "resolve_envs.scd".loadRelative[0];
 ~scheduleMeasures = "schedule_measures.scd".loadRelative[0];
+~initChannels = "init_channels.scd".loadRelative[0];
 
-a = ~defaults.value(
+~chorus = ~defaults.value(
   (
     outBus: 0,
     amp: 0.2,
-    gp: 0.12,
-    trigOverlap: 2,
+    gp: 0.8,
+    trigOverlap: 12,
     pPos: 0,
-    pSpread: 0.25,
+    pSpread: 0.15,
     freq: 220,
+    vibeWidth: 0.0005,
     envBuf: -1,
     harmAmpArray: (1..7).collect { |i| i }.reverse.collect { |i| (i / 7) ** 2 },
+    sharedParams: [\outBus, \amp, \pPos, \envBuf, \env, \vibeWidth, \harmAmpArray],
     run: {
-      Synth(\ddsynth, [
-        outBus: ~outBus,
-        amp: ~amp,
-        pPos: ~pPos,
-        pSpread: ~pSpread,
-        freq: ~freq,
-        envBuf: ~envBuf,
-        env: ~env,
-        harmAmpArray: ~harmAmpArray
-      ]);
-      Synth(\ddsynth, [
-        outBus: ~outBus,
-        amp: ~amp,
-        pPos: ~pPos,
-        pSpread: ~pSpread,
-        freq: ~freq * 0.98329,
-        envBuf: ~envBuf,
-        env: ~env,
-        harmAmpArray: ~harmAmpArray
-      ]);
-      Synth(\ddsynth, [
-        outBus: ~outBus,
-        amp: ~amp,
-        pPos: ~pPos,
-        pSpread: ~pSpread,
-        freq: ~freq * 1.0123123,
-        envBuf: ~envBuf,
-        env: ~env,
-        harmAmpArray: ~harmAmpArray
-      ]);
+      var params = ~sharedParams.collect { |param|
+        [param, currentEnvironment.at(param)]
+      }.flatten;
+
+      Synth(\ddsynth, params ++ [freq: ~freq]);
+      Synth(\ddsynth, params ++ [freq: ~freq * 0.98329]);
+      Synth(\ddsynth, params ++ [freq: ~freq * 1.0123123]);
     }
+
+    //   Synth(\ddsynth, [
+    //     outBus: ~outBus,
+    //     amp: ~amp,
+    //     pPos: ~pPos,
+    //     pSpread: ~pSpread,
+    //     freq: ~freq,
+    //     envBuf: ~envBuf,
+    //     env: ~env,
+    //     vibeWidth: ~vibeWidth,
+    //     harmAmpArray: ~harmAmpArray
+    //   ]);
+    //   Synth(\ddsynth, [
+    //     outBus: ~outBus,
+    //     amp: ~amp,
+    //     pPos: ~pPos,
+    //     pSpread: ~pSpread,
+    //     freq: ~freq * 0.98329,
+    //     envBuf: ~envBuf,
+    //     env: ~env,
+    //     vibeWidth: ~vibeWidth,
+    //     harmAmpArray: ~harmAmpArray
+    //   ]);
+    //   Synth(\ddsynth, [
+    //     outBus: ~outBus,
+    //     amp: ~amp,
+    //     pPos: ~pPos,
+    //     pSpread: ~pSpread,
+    //     freq: ~freq * 1.0123123,
+    //     envBuf: ~envBuf,
+    //     env: ~env,
+    //     vibeWidth: ~vibeWidth,
+    //     harmAmpArray: ~harmAmpArray
+    //   ]);
+    // }
   )
 );
 
-e = Env([~quiet, 1, 1, ~quiet], [2, 10, 2], \exp).asArray;
+~names = [\low, \medLow, \med, \medHi, \medHiHi, \hi];
+
+~channels = ~initChannels.value(~names);
 
 b = ~resolveEnvs.value([
   (
-    bpm: 100, bpb: 4, events: [
-      a.value((env: e, beat: 1, freq: PC(\cs, 5).freq)),
-      a.value((env: e, beat: 1, freq: PC(\gs, 4).freq)),
-      a.value((env: e, beat: 1, freq: PC(\f, 4).freq))
+    bpm: 50, bpb: 4, events: [
+      ~chorus.value((
+        name: \low,
+        env: ~env,
+        beat: 1,
+        freq: PC(\f, 3).freq,
+        envs: (env: ~quiet)
+      ))
     ]
   ),
-  (events: [])
+  (
+    events: [
+      (name: \low, env: \env, curve: \exp, val: -10.dbamp),
+      ~chorus.value((
+        name: \medLow,
+        beat: 1,
+        env: ~env,
+        freq: PC(\gs, 3).freq,
+        env: ~quiet,
+        envs: (env: ~quiet)
+      ))
+    ]
+  ),
+  (
+    events: [
+      (name: \medLow, env: \env, curve: \exp, val: -10.dbamp),
+      ~chorus.value((
+        name: \med,
+        env: ~env,
+        beat: 1,
+        freq: PC(\cs, 4).freq,
+        envs: (env: ~quiet)
+      ))
+    ]
+  ),
+  (
+    events: [
+      (name: \med, env: \env, curve: \exp, val: -10.dbamp),
+      ~chorus.value((
+        name: \medHi,
+        env: ~env,
+        beat: 1,
+        freq: PC(\f, 4).freq,
+        envs: (env: ~quiet)
+      ))
+    ]
+  ),
+  (
+    events: [
+      (name: \medHi, env: \env, curve: \exp, val: -10.dbamp),
+      ~chorus.value((
+        name: \medHiHi,
+        env: ~env,
+        beat: 1,
+        freq: PC(\gs, 4).freq,
+        envs: (env: ~quiet)
+      ))
+    ]
+  ),
+  (
+    events: [
+      (name: \medHiHi, env: \env, curve: \exp, val: -10.dbamp),
+      ~chorus.value((
+        name: \hi,
+        env: ~env,
+        beat: 1,
+        freq: PC(\cs, 5).freq,
+        envs: (env: ~quiet)
+      ))
+    ]
+  ),
+  (events: [(name: \hi, env: \env, curve: \exp, val: -10.dbamp)]),
+  (
+    events: ~names.collect { |name|
+      (name: name, env: \env, curve: \exp, val: -6.dbamp)
+    }
+  ),
+  (events: [(name: \low, env: \env, curve: \exp, val: ~quiet)]),
+  (events: [(name: \medLow, env: \env, curve: \exp, val: ~quiet)]),
+  (events: [(name: \med, env: \env, curve: \exp, val: ~quiet)]),
+  (events: [(name: \medHi, env: \env, curve: \exp, val: ~quiet)]),
+  (events: [(name: \medHiHi, env: \env, curve: \exp, val: ~quiet)]),
+  (events: [(name: \hi, env: \env, curve: \exp, val: ~quiet)]),
 ]);
 
-~stop = ~scheduleMeasures.value(b);
+~stop = ~scheduleMeasures.value(~channels, b);
 ~stop.value;
+~channels.do { |c| c.finish.value }

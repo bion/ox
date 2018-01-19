@@ -89,6 +89,14 @@ var synthDefs = [
     Out.ar(outbus, PlayBuf.ar(1, buf, BufRateScale.ir(buf), doneAction: 2)*amp);
   }),
 
+  SynthDef(\recordRoute, {
+    arg outBus, inBus, buf;
+    var in = In.ar(inBus, 2);
+
+    Out.ar(outBus, in);
+    DiskOut.ar(buf, in);
+  }),
+
   SynthDef(\recordbuf_mono, {
     arg inbus, buf, startpos, gate=1;
     var env = Linen.kr(gate, 0.01, releaseTime: 0.01, doneAction: 2);
@@ -141,12 +149,13 @@ var synthDefs = [
   /* ------------------------ sources --------------------------- */
 
   SynthDef(\ddsynth, {
-    |outBus, amp, pPos, pSpread, freq, envBuf, freqMul = 1,
+    |outBus, freq, amp, envBuf, pPos = 0, pSpread = 0.5, freqMul = 1,
     dur, trigLFOfreq = 0.2, trigOverlap = 3.5,
     trigLFOrange = 20, trigLFOMul, gp = 0.12,
     vibeRate = 6.5, vibeWidth = 0.01,
     harmLFOfreq = 0.5, harmLFOlo = -0.01,
     indexLFOfreq = 0.2, indexLFOlo = 0.5, indexLFOhi = 5|
+
     var grains, trig, pan, index, harmAmpLFOs, harmAmps,
     vib, rand, vibosc, vibwth, vibamp, env, sig;
 
@@ -165,7 +174,9 @@ var synthDefs = [
     index = LFNoise2.kr(indexLFOfreq).range(indexLFOlo, indexLFOhi);
 
     harmAmps = Control.names(\harmAmpArray).kr(7.collect { 1 });
-    harmAmpLFOs = 7.collect { LFNoise2.kr(harmLFOfreq).range(harmLFOlo.dbamp, 1) };
+    harmAmpLFOs = 7.collect {
+      LFNoise2.kr(harmLFOfreq).range(harmLFOlo.dbamp, 1)
+    };
 
     grains = GrainFM.ar(
       numChannels: 2,
@@ -186,7 +197,7 @@ var synthDefs = [
 
     sig = env * amp * grains;
 
-    Out.ar(outBus, sig);
+    Out.ar(outBus, ((sig * 10).tanh / 10));
     DetectSilence.ar(sig, doneAction: 2);
   }),
 
