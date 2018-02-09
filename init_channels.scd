@@ -1,3 +1,7 @@
+var getPathForName = { |name|
+  ("~/dev/ox/sc-out/" ++ name ++ ".aiff").standardizePath;
+};
+
 { |names|
   var channels = IdentityDictionary[];
 
@@ -5,10 +9,13 @@
     var channel;
     var bus = Bus.audio(s, 2);
     var recordBuf = Buffer.alloc(s, s.sampleRate.nextPowerOfTwo * 2, 2);
+    var filePath = getPathForName.value(name);
     var synth;
 
+    File.delete(filePath);
+
     recordBuf.write(
-      ("~/dev/ox/sc-out/" ++ name ++ ".aiff").standardizePath,
+      filePath,
       "aiff",
       "int16",
       0,
@@ -29,6 +36,7 @@
       },
       finish: {
         ("stop recording " ++ name).postln;
+        bus.free;
         synth.free;
         recordBuf.close;
         recordBuf.free;

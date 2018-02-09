@@ -198,7 +198,6 @@ var synthDefs = [
     sig = env * amp * grains;
 
     Out.ar(outBus, ((sig * 10).tanh / 10));
-    DetectSilence.ar(sig, doneAction: 2);
   }),
 
   /* ------------------------ com --------------------------- */

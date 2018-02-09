@@ -13,6 +13,8 @@
 ~scheduleMeasures = "schedule_measures.scd".loadRelative[0];
 ~initChannels = "init_channels.scd".loadRelative[0];
 
+~free = { |name| (name: name, synthMessage: [\free]) };
+
 ~chorus = ~defaults.value(
   (
     outBus: 0,
@@ -27,49 +29,50 @@
     harmAmpArray: (1..7).collect { |i| i }.reverse.collect { |i| (i / 7) ** 2 },
     sharedParams: [\outBus, \amp, \pPos, \envBuf, \env, \vibeWidth, \harmAmpArray],
     run: {
-      var params = ~sharedParams.collect { |param|
-        [param, currentEnvironment.at(param)]
-      }.flatten;
+      // var params = ~sharedParams.collect { |param|
+      //   [param, currentEnvironment.at(param)]
+      // }.flatten;
 
-      Synth(\ddsynth, params ++ [freq: ~freq]);
-      Synth(\ddsynth, params ++ [freq: ~freq * 0.98329]);
-      Synth(\ddsynth, params ++ [freq: ~freq * 1.0123123]);
+      // Synth(\ddsynth, params ++ [freq: ~freq]);
+      // Synth(\ddsynth, params ++ [freq: ~freq * 0.98329]);
+      // Synth(\ddsynth, params ++ [freq: ~freq * 1.0123123]);
+
+      [
+        Synth(\ddsynth, [
+          outBus: ~outBus,
+          amp: ~amp,
+          pPos: ~pPos,
+          pSpread: ~pSpread,
+          freq: ~freq,
+          envBuf: ~envBuf,
+          env: ~env,
+          vibeWidth: ~vibeWidth,
+          harmAmpArray: ~harmAmpArray
+        ]),
+        Synth(\ddsynth, [
+          outBus: ~outBus,
+          amp: ~amp,
+          pPos: ~pPos,
+          pSpread: ~pSpread,
+          freq: ~freq * 0.98329,
+          envBuf: ~envBuf,
+          env: ~env,
+          vibeWidth: ~vibeWidth,
+          harmAmpArray: ~harmAmpArray
+        ]),
+        Synth(\ddsynth, [
+          outBus: ~outBus,
+          amp: ~amp,
+          pPos: ~pPos,
+          pSpread: ~pSpread,
+          freq: ~freq * 1.0123123,
+          envBuf: ~envBuf,
+          env: ~env,
+          vibeWidth: ~vibeWidth,
+          harmAmpArray: ~harmAmpArray
+        ])
+      ];
     }
-
-    //   Synth(\ddsynth, [
-    //     outBus: ~outBus,
-    //     amp: ~amp,
-    //     pPos: ~pPos,
-    //     pSpread: ~pSpread,
-    //     freq: ~freq,
-    //     envBuf: ~envBuf,
-    //     env: ~env,
-    //     vibeWidth: ~vibeWidth,
-    //     harmAmpArray: ~harmAmpArray
-    //   ]);
-    //   Synth(\ddsynth, [
-    //     outBus: ~outBus,
-    //     amp: ~amp,
-    //     pPos: ~pPos,
-    //     pSpread: ~pSpread,
-    //     freq: ~freq * 0.98329,
-    //     envBuf: ~envBuf,
-    //     env: ~env,
-    //     vibeWidth: ~vibeWidth,
-    //     harmAmpArray: ~harmAmpArray
-    //   ]);
-    //   Synth(\ddsynth, [
-    //     outBus: ~outBus,
-    //     amp: ~amp,
-    //     pPos: ~pPos,
-    //     pSpread: ~pSpread,
-    //     freq: ~freq * 1.0123123,
-    //     envBuf: ~envBuf,
-    //     env: ~env,
-    //     vibeWidth: ~vibeWidth,
-    //     harmAmpArray: ~harmAmpArray
-    //   ]);
-    // }
   )
 );
 
@@ -77,9 +80,9 @@
 
 ~channels = ~initChannels.value(~names);
 
-b = ~resolveEnvs.value([
+~score = ~resolveEnvs.value([
   (
-    bpm: 50, bpb: 4, events: [
+    bpm: 100, bpb: 4, events: [
       ~chorus.value((
         name: \low,
         env: ~env,
@@ -156,14 +159,14 @@ b = ~resolveEnvs.value([
       (name: name, env: \env, curve: \exp, val: -6.dbamp)
     }
   ),
-  (events: [(name: \low, env: \env, curve: \exp, val: ~quiet)]),
-  (events: [(name: \medLow, env: \env, curve: \exp, val: ~quiet)]),
-  (events: [(name: \med, env: \env, curve: \exp, val: ~quiet)]),
-  (events: [(name: \medHi, env: \env, curve: \exp, val: ~quiet)]),
-  (events: [(name: \medHiHi, env: \env, curve: \exp, val: ~quiet)]),
-  (events: [(name: \hi, env: \env, curve: \exp, val: ~quiet)]),
+  (events: [(name: \low, env: \env, curve: \exp, val: ~quiet), ~free.value(\low)]),
+  (events: [(name: \medLow, env: \env, curve: \exp, val: ~quiet), ~free.value(\medLow)]),
+  (events: [(name: \med, env: \env, curve: \exp, val: ~quiet), ~free.value(\med)]),
+  (events: [(name: \medHi, env: \env, curve: \exp, val: ~quiet), ~free.value(\medHi)]),
+  (events: [(name: \medHiHi, env: \env, curve: \exp, val: ~quiet), ~free.value(\medHiHi)]),
+  (events: [(name: \hi, env: \env, curve: \exp, val: ~quiet), ~free.value(\hi)]),
 ]);
 
-~stop = ~scheduleMeasures.value(~channels, b);
+~stop = ~scheduleMeasures.value(~channels, ~score);
 ~stop.value;
-~channels.do { |c| c.finish.value }
+// ~channels.do { |c| c.finish.value }
