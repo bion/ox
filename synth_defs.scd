@@ -291,6 +291,34 @@ var synthDefs = [
     Out.ar(bus, sig.softclip * Linen.kr(gate, 0.05, releaseTime: 0.05, doneAction: 2));
   }),
 
+  SynthDef(\fank_mono, {
+    arg bus, amp, freq, vib_rate = 11, vib_width = 0.00125, gate=1;
+    var sig, vib, freqs, silencers, ampMul, freq_lag, env;
+
+    vib_rate = vib_rate * LFDNoise3.kr(2).range(0.9, 1.1);
+    vib = SinOsc.kr(vib_rate, 0, vib_width) + LFNoise2.kr(1/vib_rate, vib_width/2) + 1;
+
+    sig = Pulse.ar(freq,
+      [
+        SinOsc.kr(vib_rate).range(0.2, 0.3),
+        SinOsc.kr(vib_rate).range(0.4, 0.5),
+        SinOsc.kr(vib_rate).range(0.1, 0.2)
+      ],
+      mul: 0.2).mean +
+    SinOsc.ar(-7.midiratio * freq, 0, -8.dbamp * 0.2) +
+    SinOsc.ar(2 * freq, 0, -8.dbamp * 0.2);
+
+    sig = MoogFF.ar(sig, freq * 10, 0.2, mul: 2) + sig;
+
+    ampMul = LinExp.kr(amp, 0, 64, -60.dbamp, -4.dbamp).lag3(0.002) * (amp > 0);
+    sig = sig * ampMul * 0.25;
+
+    env = EnvGen.kr(Control.names([\env]).kr(Env.newClear(64)));
+
+    env.poll;
+    Out.ar(bus, sig.softclip * env);
+  }),
+
   SynthDef(\com_dirt_rhode, {
     arg bus, amp, vib_rate = 11, freqLagParam=0.03, beatDur=1, vib_width = 0.00125, gate=1;
     var sig, env, vib, warm = LFNoise2.kr(vib_rate).range(0.9, 1.1);
