@@ -1,4 +1,4 @@
-var synthDefs = [
+~synthDefs = [
   SynthDef(\v_control, {
     arg outbus, amp;
     var off = amp > 2;
@@ -459,7 +459,12 @@ var synthDefs = [
   SynthDef(\mouse_x_out, {|outbus, lo, hi, warp=0| Out.kr(outbus, MouseX.kr(lo, hi, warp))}),
 
   SynthDef(\control_stub, {|bus, value| Out.kr(bus, value) })
-].flat.do { |sd| sd.add; };
+];
+
+~synthDefs = ~synthDefs.flat.inject(IdentityDictionary[]) { |dict, sd|
+  sd.add;
+  dict[sd.name] = sd;
+};
 
 "synth defs loaded".postln;
 nil;

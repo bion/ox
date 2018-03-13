@@ -16,6 +16,8 @@ measureType = { |event|
 
 prepareEnvs = { |event|
   var return = event.envs.collect { |val|
+    val ?? { Error("Missing initial env val for one of: " + event.envs).throw };
+
     (levels: List[val], times: List[], curves: List[]);
   };
 
@@ -43,6 +45,7 @@ prepareEnvs = { |event|
         },
         \curveNode, {
           var eventEnvs, env, beat;
+
           beat = event.beat ? 1;
 
           eventEnvs = allEnvelopes[event.name];
