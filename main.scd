@@ -1,19 +1,12 @@
-~defaults = { |template|
-  { |overrides|
-    putAll((), template, overrides)
-  };
+"ox.scd".loadRelative;
+
+~detune = { |synthName, params, freq|
+  [
+    Synth(\ddsynth, params ++ [freq: freq]),
+    Synth(\ddsynth, params ++ [freq: freq * 0.98329]),
+    Synth(\ddsynth, params ++ [freq: freq * 1.0123123])
+  ]
 };
-
-"synth_def_support.scd".loadRelative;
-"synth_defs.scd".loadRelative;
-"keyboard.scd".loadRelative;
-
-~quiet = -60.dbamp;
-~resolveEnvs = "resolve_envs.scd".loadRelative[0];
-~scheduleMeasures = "schedule_measures.scd".loadRelative[0];
-~initChannels = "init_channels.scd".loadRelative[0];
-
-~free = { |name| (name: name, synthMessage: [\free]) };
 
 ~chorus = ~defaults.value(
   (
@@ -29,49 +22,11 @@
     harmAmpArray: (1..7).collect { |i| i }.reverse.collect { |i| (i / 7) ** 2 },
     sharedParams: [\outBus, \amp, \pPos, \envBuf, \env, \vibeWidth, \harmAmpArray],
     run: {
-      // var params = ~sharedParams.collect { |param|
-      //   [param, currentEnvironment.at(param)]
-      // }.flatten;
+      var params = ~sharedParams.collect { |param|
+        [param, currentEnvironment.at(param)]
+      }.flatten;
 
-      // Synth(\ddsynth, params ++ [freq: ~freq]);
-      // Synth(\ddsynth, params ++ [freq: ~freq * 0.98329]);
-      // Synth(\ddsynth, params ++ [freq: ~freq * 1.0123123]);
-
-      [
-        Synth(\ddsynth, [
-          outBus: ~outBus,
-          amp: ~amp,
-          pPos: ~pPos,
-          pSpread: ~pSpread,
-          freq: ~freq,
-          envBuf: ~envBuf,
-          env: ~env,
-          vibeWidth: ~vibeWidth,
-          harmAmpArray: ~harmAmpArray
-        ]),
-        Synth(\ddsynth, [
-          outBus: ~outBus,
-          amp: ~amp,
-          pPos: ~pPos,
-          pSpread: ~pSpread,
-          freq: ~freq * 0.98329,
-          envBuf: ~envBuf,
-          env: ~env,
-          vibeWidth: ~vibeWidth,
-          harmAmpArray: ~harmAmpArray
-        ]),
-        Synth(\ddsynth, [
-          outBus: ~outBus,
-          amp: ~amp,
-          pPos: ~pPos,
-          pSpread: ~pSpread,
-          freq: ~freq * 1.0123123,
-          envBuf: ~envBuf,
-          env: ~env,
-          vibeWidth: ~vibeWidth,
-          harmAmpArray: ~harmAmpArray
-        ])
-      ];
+      ~detune.value(\ddsynth, params, ~freq);
     }
   )
 );
@@ -169,4 +124,4 @@
 
 ~stop = ~scheduleMeasures.value(~channels, ~score);
 ~stop.value;
-// ~channels.do { |c| c.finish.value }
+~channels.do { |c| c.finish.value }
