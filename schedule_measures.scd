@@ -73,9 +73,9 @@ var checkEventHasBeat = { |event|
     clock.sched(1, {
       var measure = measures[currentMeasureIndex];
 
-      printCurrentMeaure.value(currentMeasureIndex, measures);
-
       if (keepPlaying) {
+        printCurrentMeaure.value(currentMeasureIndex, measures);
+
         measure.events.flatten.do { |event|
           var eventName = event.name;
           var newSynths;
