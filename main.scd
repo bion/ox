@@ -1,4 +1,4 @@
-var detune;
+var detune, chorus, names, channels, score;
 
 "ox.scd".loadRelative;
 
@@ -10,7 +10,7 @@ detune = { |synthName, params, freq|
   ];
 };
 
-~chorus = ~defaults.value(
+chorus = ~defaults.value(
   (
     outBus: 0,
     amp: 0.2,
@@ -33,14 +33,14 @@ detune = { |synthName, params, freq|
   )
 );
 
-~names = [\low, \medLow, \med, \medHi, \medHiHi, \hi];
+names = [\low, \medLow, \med, \medHi, \medHiHi, \hi];
 
-~channels = ~initChannels.value(~names);
+channels = ~initChannels.value(names);
 
-~score = ~resolveEnvs.value([
+score = ~resolveEnvs.value([
   (
     bpm: 100, bpb: 4, events: [
-      ~chorus.value((
+      chorus.value((
         name: \low,
         env: ~env,
         beat: 1,
@@ -52,7 +52,7 @@ detune = { |synthName, params, freq|
   (
     events: [
       (name: \low, env: \env, curve: \exp, val: -10.dbamp),
-      ~chorus.value((
+      chorus.value((
         name: \medLow,
         beat: 1,
         env: ~env,
@@ -65,7 +65,7 @@ detune = { |synthName, params, freq|
   (
     events: [
       (name: \medLow, env: \env, curve: \exp, val: -10.dbamp),
-      ~chorus.value((
+      chorus.value((
         name: \med,
         env: ~env,
         beat: 1,
@@ -77,7 +77,7 @@ detune = { |synthName, params, freq|
   (
     events: [
       (name: \med, env: \env, curve: \exp, val: -10.dbamp),
-      ~chorus.value((
+      chorus.value((
         name: \medHi,
         env: ~env,
         beat: 1,
@@ -89,7 +89,7 @@ detune = { |synthName, params, freq|
   (
     events: [
       (name: \medHi, env: \env, curve: \exp, val: -10.dbamp),
-      ~chorus.value((
+      chorus.value((
         name: \medHiHi,
         env: ~env,
         beat: 1,
@@ -101,7 +101,7 @@ detune = { |synthName, params, freq|
   (
     events: [
       (name: \medHiHi, env: \env, curve: \exp, val: -10.dbamp),
-      ~chorus.value((
+      chorus.value((
         name: \hi,
         env: ~env,
         beat: 1,
@@ -112,7 +112,7 @@ detune = { |synthName, params, freq|
   ),
   (events: [(name: \hi, env: \env, curve: \exp, val: -10.dbamp)]),
   (
-    events: ~names.collect { |name|
+    events: names.collect { |name|
       (name: name, env: \env, curve: \exp, val: -6.dbamp)
     }
   ),
@@ -124,6 +124,6 @@ detune = { |synthName, params, freq|
   (events: [(name: \hi, env: \env, curve: \exp, val: ~quiet), ~free.value(\hi)]),
 ]);
 
-~stop = ~scheduleMeasures.value(~channels, ~score);
-~stop.value;
-~channels.do { |c| c.finish.value }
+stop = ~scheduleMeasures.value(channels, score);
+stop.value;
+channels.do { |c| c.finish.value }
