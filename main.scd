@@ -1,11 +1,13 @@
+var detune;
+
 "ox.scd".loadRelative;
 
-~detune = { |synthName, params, freq|
+detune = { |synthName, params, freq|
   [
-    Synth(\ddsynth, params ++ [freq: freq]),
-    Synth(\ddsynth, params ++ [freq: freq * 0.98329]),
-    Synth(\ddsynth, params ++ [freq: freq * 1.0123123])
-  ]
+    Synth(synthName, params ++ [freq: freq]),
+    Synth(synthName, params ++ [freq: freq * 0.98329]),
+    Synth(synthName, params ++ [freq: freq * 1.0123123])
+  ];
 };
 
 ~chorus = ~defaults.value(
@@ -26,7 +28,7 @@
         [param, currentEnvironment.at(param)]
       }.flatten;
 
-      ~detune.value(\ddsynth, params, ~freq);
+      detune.value(\ddsynth, params, ~freq);
     }
   )
 );
