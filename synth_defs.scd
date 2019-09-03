@@ -1,31 +1,31 @@
 ~synthDefs = [
   SynthDef(\v_control, {
-    arg outbus, amp;
+    arg outBus, amp;
     var off = amp > 2;
 
-    Out.kr(outbus, (LinExp.kr(amp, 0, 127, -40.dbamp, 1) * off).lag3(0.01));
+    Out.kr(outBus, (LinExp.kr(amp, 0, 127, -40.dbamp, 1) * off).lag3(0.01));
   }),
 
   SynthDef(\p_control_lag, {
-    arg outbus, param;
+    arg outBus, param;
 
-    Out.kr(outbus, param.lag3(0.01) )
+    Out.kr(outBus, param.lag3(0.01) )
   }),
 
   SynthDef(\p_control, {
-    arg outbus, param;
+    arg outBus, param;
 
-    Out.kr(outbus, param)
+    Out.kr(outBus, param)
   }),
 
   SynthDef(\metronome_sine, {
-    arg outbus, amp;
+    arg outBus, amp;
     var out, env;
 
     env = EnvGen.kr(Env.perc(0.001, 0.05, amp, -4), doneAction: 2);
     out = SinOsc.ar(1800, 0, env);
 
-    Out.ar(outbus, out);
+    Out.ar(outBus, out);
   }),
 
   SynthDef(\ixibass, {
@@ -46,20 +46,20 @@
   }),
 
   SynthDef(\triggeredPlayBuf, {
-    arg trigbus, outbus, buf, amp=1;
+    arg trigbus, outBus, buf, amp=1;
     var trig, out;
 
     trig = In.kr(trigbus, 1);
     out = PlayBuf.ar(1, buf, BufRateScale.kr(buf), loop: 0, trigger: trig);
-    Out.ar(outbus, out * amp);
+    Out.ar(outBus, out * amp);
   }),
 
   SynthDef(\control_env_testing, {
-    arg outbus;
+    arg outBus;
     var env;
 
     env = Control.names([\env]).kr(Env.newClear(64));
-    Out.kr(outbus, EnvGen.kr(env, doneAction: 14));
+    Out.kr(outBus, EnvGen.kr(env, doneAction: 14));
   }),
 
   SynthDef(\playbuf_stereo_to_mono_to_mons, {
@@ -74,19 +74,19 @@
   }),
 
   SynthDef(\playbuf_mono, {
-    arg outbus, buf, dur, startpos=0, amp=1, gate=1;
+    arg outBus, buf, dur, startpos=0, amp=1, gate=1;
 
-    Out.ar(outbus,
+    Out.ar(outBus,
       Linen.kr(gate, releaseTime: 0.02, doneAction: 2) *
       EnvGen.kr(Env([0, 1, 1, 0], [0.01, 1, 0.01].normalize), amp,
         timeScale: dur, doneAction: 2) *
-      PlayBuf.ar(1, buf, BufRateScale.ir(buf), startPos: startpos, doneAction: 2));
+      PlayBuf.ar(1, buf, BufRateScale.ir(buf), startPos: startpos, doneAction: ));
   }),
 
   SynthDef(\playbuf_simple, {
-    arg outbus, buf, amp=1;
+    arg outBus, buf, amp=1;
 
-    Out.ar(outbus, PlayBuf.ar(1, buf, BufRateScale.ir(buf), doneAction: 2)*amp);
+    Out.ar(outBus, PlayBuf.ar(1, buf, BufRateScale.ir(buf), doneAction: 2)*amp);
   }),
 
   SynthDef(\recordRoute, {
@@ -105,45 +105,45 @@
   }),
 
   SynthDef(\route_mono, {
-    arg inbus, outbus;
+    arg inbus, outBus;
 
-    Out.ar(outbus, In.ar(inbus, 1) );
+    Out.ar(outBus, In.ar(inbus, 1) );
   }),
 
   SynthDef(\route_mono_amp, {
-    arg inbus, outbus, amp=1;
+    arg inbus, outBus, amp=1;
 
-    Out.ar(outbus, In.ar(inbus, 1) * amp.lag(0.05) );
+    Out.ar(outBus, In.ar(inbus, 1) * amp.lag(0.05) );
   }),
 
   (1..8).collect {|i|
     SynthDef(asSymbol("route_mono_to_" ++ i), {
       arg inbus;
 
-      Out.ar(\outbusses.ir(8 ! i), In.ar(inbus, 1));
+      Out.ar(\outBusses.ir(8 ! i), In.ar(inbus, 1));
     })
   },
 
   SynthDef(\route_4_chans_to_mono, {
-    arg inbusses, outbus;
+    arg inbusses, outBus;
 
-    Out.ar( outbus, In.ar(inbusses, 4).sum );
+    Out.ar( outBus, In.ar(inbusses, 4).sum );
   }),
 
   SynthDef(\route_m2s, {
-    arg inbus, outbus;
+    arg inbus, outBus;
 
-    Out.ar(outbus, In.ar(inbus, 1) ! 2);
+    Out.ar(outBus, In.ar(inbus, 1) ! 2);
   }),
 
   SynthDef(\route_m2s_free_on_silence, {
-    arg inbus, outbus;
+    arg inbus, outBus;
     var in = In.ar(inbus, 1);
 
     DetectSilence.ar(in, time: 5.0, doneAction: 14);
     in = Compander.ar(in, in, 0.5, 1.0, 0.05, 0.002, 0.01);
 
-    Out.ar(outbus, in ! 2);
+    Out.ar(outBus, in ! 2);
   }),
 
   /* ------------------------ sources --------------------------- */
@@ -355,9 +355,20 @@
 
   /* ------------------------------- general filters --------------------------------- */
 
+  SynthDef(\sinusoidal_perturbation, {
+    arg bus, gate=1;
+    var in, chain;
+
+    in = In.ar(bus, 1);
+    chain = in * sin(in * 2pi * 5) * 0.5;
+    chain = LeakDC.ar(chain);
+
+    XOut.ar(bus, Linen.kr(gate, 0.05, releaseTime: 0.05, doneAction: 2), chain);
+  }),
+
   SynthDef(\cynk_broad, {
     arg bus, gate=1;
-    var layer1, layer2, in, chain;
+    var in, chain;
 
     in = In.ar(bus, 1);
     chain = Fb({|fb|
@@ -369,7 +380,7 @@
 
   SynthDef(\cynk_hi, {
     arg bus, gate=1;
-    var layer1, layer2, in, chain;
+    var in, chain;
 
     in = In.ar(bus, 1);
     chain = Fb({|fb|
@@ -381,7 +392,7 @@
 
   SynthDef(\cynk_lo, {
     arg bus, gate=1;
-    var layer1, layer2, in, chain;
+    var in, chain;
 
     in = In.ar(bus, 1);
     chain = Fb({|fb|
@@ -456,9 +467,10 @@
 
   /* ------------------------------- test ugens --------------------------------- */
 
-  SynthDef(\mouse_x_out, {|outbus, lo, hi, warp=0| Out.kr(outbus, MouseX.kr(lo, hi, warp))}),
+  SynthDef(\mouse_x_out, {|outBus, lo, hi, warp=0| Out.kr(outBus, MouseX.kr(lo, hi, warp))}),
 
   SynthDef(\control_stub, {|bus, value| Out.kr(bus, value) })
+
 ];
 
 ~synthDefs = ~synthDefs.flat.inject(IdentityDictionary[]) { |dict, sd|

@@ -1,0 +1,111 @@
+var o, p;
+o = [
+  KeyboardInstrumentSettingsArchive.prNew,  IdentityDictionary.prNew,  Array.prNew(32),  IdentityDictionary.prNew,
+  Array.prNew(32),  MIDIControlSpec.prNew,  MIDIEndPoint.prNew,  "BCR2000",
+  "Port 1",  { |controlValue| controlValue.linlin(0, 127, 0, 4) },  MIDIControlSpec.prNew,  { |controlValue| controlValue.linlin(0, 127, 0.0, 0.1) },
+  MIDIControlSpec.prNew,  { |controlValue| controlValue.linlin(0, 127, 0.01, 0.5) },  MIDIControlSpec.prNew,  { |controlValue| controlValue.linlin(0, 127, 0, 1) },
+  MIDIControlSpec.prNew,  { |controlValue| controlValue.linlin(0, 127, 0.01, 1) },  MIDIControlSpec.prNew,  { |controlValue| controlValue.linlin(0, 127, 0, 4) },
+  MIDIControlSpec.prNew,  { |controlValue| controlValue.linlin(0, 127, 0, 3.8) },  MIDIControlSpec.prNew,  { |controlValue| controlValue.linlin(0, 127, 1, 12) },
+  IdentityDictionary.prNew,  Array.prNew(4),  MIDIControlSpec.prNew,  MIDIEndPoint.prNew,
+  "Breath Controller",  "Breath Controller",  { |controlValue|
+    if (controlValue == 0) {
+      0;
+    } {
+      controlValue.linexp(0, 80, -60.dbamp, 1);
+    };
+  },  Array.prNew(18)
+];
+p = [
+  // KeyboardInstrumentSettingsArchive
+  0, [ controlMap: o[1],  currentParams: o[31] ],
+  // IdentityDictionary
+  1, [ array: o[2],  size: 2,
+    proto: nil,  parent: nil,
+    know: false ],
+  // Array
+  2, [ nil,  nil,  1048064884,  o[3],
+    6228775,  o[24],  nil,  nil,
+    nil,  nil,  nil,  nil,
+    nil,  nil,  nil,  nil,
+    nil,  nil,  nil,  nil,
+    nil,  nil,  nil,  nil,
+    nil,  nil,  nil,  nil,
+    nil,  nil,  nil,  nil ],
+  // IdentityDictionary
+  3, [ array: o[4],  size: 8,
+    proto: nil,  parent: nil,
+    know: false ],
+  // Array
+  4, [ 99,  o[5],  nil,  nil,
+    90,  o[10],  nil,  nil,
+    98,  o[12],  nil,  nil,
+    97,  o[14],  91,  o[16],
+    82,  o[18],  81,  o[20],
+    nil,  nil,  nil,  nil,
+    89,  o[22],  nil,  nil,
+    nil,  nil,  nil,  nil ],
+  // MIDIControlSpec
+  5, [ controlName: 'diss',  inputEndPoint: o[6],
+    messageNumber: 99,  mapFunction: o[9],
+    currentMIDIValue: 0,  currentValue: 0,
+    paramIndex: 7,  outputDeviceMemo: nil ],
+  // MIDIEndPoint
+  6, [ device: o[7],  name: o[8],
+    uid: 1048064884 ],
+  // MIDIControlSpec
+  10, [ controlName: 'vibeWidth',  inputEndPoint: o[6],
+    messageNumber: 90,  mapFunction: o[11],
+    currentMIDIValue: 13,  currentValue: 0.010236220472441,
+    paramIndex: 3,  outputDeviceMemo: nil ],
+  // MIDIControlSpec
+  12, [ controlName: 'gp',  inputEndPoint: o[6],
+    messageNumber: 98,  mapFunction: o[13],
+    currentMIDIValue: 27,  currentValue: 0.11417322834646,
+    paramIndex: 6,  outputDeviceMemo: nil ],
+  // MIDIControlSpec
+  14, [ controlName: 'pSpread',  inputEndPoint: o[6],
+    messageNumber: 97,  mapFunction: o[15],
+    currentMIDIValue: 61,  currentValue: 0.48031496062992,
+    paramIndex: 5,  outputDeviceMemo: nil ],
+  // MIDIControlSpec
+  16, [ controlName: 'vibOnset',  inputEndPoint: o[6],
+    messageNumber: 91,  mapFunction: o[17],
+    currentMIDIValue: 3,  currentValue: 0.033385826771654,
+    paramIndex: 4,  outputDeviceMemo: nil ],
+  // MIDIControlSpec
+  18, [ controlName: 'indexLFOhi',  inputEndPoint: o[6],
+    messageNumber: 82,  mapFunction: o[19],
+    currentMIDIValue: 69,  currentValue: 2.1732283464567,
+    paramIndex: 1,  outputDeviceMemo: nil ],
+  // MIDIControlSpec
+  20, [ controlName: 'indexLFOlo',  inputEndPoint: o[6],
+    messageNumber: 81,  mapFunction: o[21],
+    currentMIDIValue: 11,  currentValue: 0.32913385826772,
+    paramIndex: 0,  outputDeviceMemo: nil ],
+  // MIDIControlSpec
+  22, [ controlName: 'trigOverlap',  inputEndPoint: o[6],
+    messageNumber: 89,  mapFunction: o[23],
+    currentMIDIValue: 9,  currentValue: 1.7795275590551,
+    paramIndex: 2,  outputDeviceMemo: nil ],
+  // IdentityDictionary
+  24, [ array: o[25],  size: 1,
+    proto: nil,  parent: nil,
+    know: false ],
+  // Array
+  25, [ 2,  o[26],  nil,  nil ],
+  // MIDIControlSpec
+  26, [ controlName: 'amp',  inputEndPoint: o[27],
+    messageNumber: 2,  mapFunction: o[30],
+    currentMIDIValue: 0,  currentValue: 0,
+    paramIndex: 8,  outputDeviceMemo: nil ],
+  // MIDIEndPoint
+  27, [ device: o[28],  name: o[29],
+    uid: 6228775 ],
+  // Array
+  31, [ 'indexLFOlo',  0.32913385826772,  'indexLFOhi',  2.1732283464567,
+    'trigOverlap',  1.7795275590551,  'vibeWidth',  0.010236220472441,
+    'vibOnset',  0.033385826771654,  'pSpread',  0.48031496062992,
+    'gp',  0.11417322834646,  'diss',  0,
+    'amp',  0 ]
+];
+prUnarchive(o,p);
