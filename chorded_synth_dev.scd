@@ -45,7 +45,7 @@ t = MIDIClient.sources.detect { |source|
 
 g.keyboardNote = { |amp, midiNoteNum, params|
   Synth(\buzzy_gameboy, params ++ [
-    outBus: 0,
+    outBus: b,
     amp: amp,
     freq: midiNoteNum.midicps
   ]);
