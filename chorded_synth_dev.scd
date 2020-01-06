@@ -18,7 +18,7 @@ SynthDef(\verb, {
   arg inBus;
   var in = In.ar(inBus, 2);
 
-  Out.ar(0, GVerb.ar(in, 30, drylevel: -6.dbamp).mean);
+  Out.ar(0, GVerb.ar(in, 20, revtime: 0.35).mean);
 }).load(s);
 
 if (v.isNil) {
@@ -44,7 +44,7 @@ t = MIDIClient.sources.detect { |source|
 };
 
 g.keyboardNote = { |amp, midiNoteNum, params|
-  Synth(\buzzy_gameboy, params ++ [
+  Synth(\clean_cool, params ++ [
     outBus: b,
     amp: amp,
     freq: midiNoteNum.midicps
@@ -52,9 +52,11 @@ g.keyboardNote = { |amp, midiNoteNum, params|
 };
 
 g.velocityToAmpFunc = { |velocity| velocity.linexp(0, 100, -50.dbamp, 1)};
-g.checkParamsForSynth(\buzzy_gameboy);
+g.checkParamsForSynth(\clean_cool);
 
 g.buildControlMap(
+  \glissDur, c, 81, { |controlValue| controlValue.linlin(0, 127, 0.1, 3) },
+  \diss, c, 82, { |controlValue| controlValue.linlin(0, 127, 0.0, 2) }
   // \indexLFOlo, c, 81, { |controlValue| controlValue.linlin(0, 127, 0, 3.8) },
   // \indexLFOhi, c, 82, { |controlValue| controlValue.linlin(0, 127, 0, 4) },
   // \trigOverlap, c, 89, { |controlValue| controlValue.linlin(0, 127, 1, 12) },
@@ -73,16 +75,9 @@ g.buildControlMap(
 );
 
 g.enable;
-// g.newGlissNoteEvents
-// 67 => G4
-// 65 => F4
-
-// 55 => G3
-// 53 => F3
-
 // thisProcess.nowExecutingPath
 // g.archiveSettings("./sclang_archives/keyboard_instrument_settings.sca".resolveRelative);
-// g.loadSettingsArchive("sclang_archives/keyboard_instrument_settings.sca".resolveRelative);
+//  g.loadSettingsArchive("sclang_archives/keyboard_instrument_settings.sca".resolveRelative);
 
 /*
  * orphaned still playing synth:

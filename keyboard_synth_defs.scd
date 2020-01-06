@@ -1,5 +1,6 @@
 SynthDef(\ddsynth, {
   |outBus, freq, amp, envBuf, gate = 1, pPos = 0, pSpread = 0.5, freqMul = 1,
+  gliss = 0, fade = 1, glissDur = 0.5
   dur, trigLFOfreq = 4, trigOverlap = 3.5,
   trigLFOrange = 20, gp = 0.12,
   vibeRate = 6.5, vibeWidth = 0.0125,
@@ -9,13 +10,11 @@ SynthDef(\ddsynth, {
   vibOnset = 0.01|
 
   var grains, trig, pan, index, harmAmpLFOs, harmAmps,
-  vib, rand, vibosc, vibwth, vibamp, env, sig;
+  vib, rand, vibWidth, vibamp, env, sig;
 
   vibamp = EnvGen.kr(Env([0.001, 1], [vibOnset], \exp));
-  vibwth = vibeWidth * vibamp;
-  vibosc = SinOsc.kr(vibeRate, 0, vibwth);
-  rand = LFNoise1.kr(1/6.5, vibwth);
-  vib = vibosc + rand + 1;
+  vibWidth = vibeWidth * vibamp;
+  vib = SinOsc.kr(vibeRate, 0, vibWidth, 1);
 
   trig = gp.reciprocal * trigOverlap;
   trig = Impulse.kr(trig);
@@ -29,6 +28,7 @@ SynthDef(\ddsynth, {
     LFNoise2.kr(harmLFOfreq).range(harmLFOlo.dbamp, 1)
   };
 
+  freq = Select.kr(gliss, [freq, freq.lag3(glissDur)]);
   grains = GrainFM.ar(
     numChannels: 2,
     trigger: trig,
@@ -57,11 +57,12 @@ SynthDef(\ddsynth, {
   sig = Mix([\soprano, \bass, \tenor, \counterTenor, \alto].collect { |register|
     Vowel(\o, register)
   }.collect(_.asArray).collect(_.flop).flatten.collect { |spec|
-    var freq = spec[0];
+    var formantFreq = spec[0];
+    var formantAmp = spec[1];
+    var formantBandwidth = spec[2];
 
-    BPF.ar(grains, freq, spec[1].dbamp, spec[2] / freq);
+    BPF.ar(grains, formantFreq, formantBandwidth / freq, formantAmp.dbamp);
   });
-
 
   env = EnvGen.kr(
     Env([-100.dbamp, 1, -100.dbamp], [0.1, 0.1], \exp, 1),
@@ -71,7 +72,7 @@ SynthDef(\ddsynth, {
   //   Env([-100.dbamp, 1, -4.dbamp, -100.dbamp], [0.01, 0.2, 0.1], \exp, 2),
   //   gate, doneAction: 2);
 
-  Out.ar(outBus, sig * env * Lag2.kr(amp, 0.03));
+  Out.ar(outBus, fade.lag3(glissDur) * sig * env * Lag2.kr(amp, 0.03));
 }).load(s);
 
 SynthDef(\buzzy_gameboy, {
@@ -107,11 +108,13 @@ SynthDef(\buzzy_gameboy, {
 }).load(s);
 
 SynthDef(\organish, {
-  |outBus, amp, freq, gate = 1, vib_rate = 11, vib_width = 0.00125|
+  |outBus, amp, freq, gliss = 0, fade = 1, glissDur = 0.3,
+  gate = 1, vib_rate = 11, vib_width = 0.00125|
   var sig, env, vib, warm = LFNoise2.kr(vib_rate).range(0.9, 1.1);
 
   vib_rate = vib_rate * LFDNoise3.kr(2).range(0.9, 1.1);
   vib = SinOsc.kr(vib_rate, 0, vib_width) + LFNoise2.kr(1/vib_rate, vib_width/2) + 1;
+  freq = Select.kr(gliss, [freq, freq.lag3(glissDur)]);
   freq = freq * vib;
 
   sig = MoogFF.ar(
@@ -129,18 +132,20 @@ SynthDef(\organish, {
     gate, doneAction: 2);
 
   sig = LeakDC.ar(sig);
-  sig = sig * env * amp;
+  sig = sig * env * amp * fade.lag3(glissDur);
   sig = AudioMSG.ar(sig, 8);
 
   Out.ar(outBus, sig.softclip);
 }).load(s);
 
 SynthDef(\clean_cool, {
-  |outBus, freq, amp, diss = 0, gate = 1|
+  |outBus, freq, amp, diss = 0.3, gate = 1, gliss = 0, fade = 1, glissDur = 0.3|
   var sig, env;
 
-  sig = Saw.ar(freq, amp);
-  sig = MoogFF.ar(sig, freq * 2, 1.4);
+  freq = Select.kr(gliss, [freq, freq.lag3(glissDur)]);
+
+  sig = Saw.ar(freq * [0.99123, 1, 1.00123], amp).mean;
+  sig = MoogFF.ar(sig, freq * 2, 1.4) + (sig * -50.dbamp);
 
   sig = Array.fill(6*4, {|i|
     var centerFreq, modFreq, multiplier;
@@ -153,10 +158,11 @@ SynthDef(\clean_cool, {
   }).sum;
 
   env = EnvGen.kr(
-    Env([-100.dbamp, 1, -4.dbamp, -100.dbamp], [0.03, 0.2, 0.1], \exp, 2),
+    Env([-100.dbamp, 1, -8.dbamp, -100.dbamp], [0.03, 0.3, glissDur], \exp, 2),
     gate, doneAction: 2);
 
-  sig = sig * env;
+  // sig = (sig * 40.dbamp).tanh * -40.dbamp;
+  sig = sig * env * fade.lag3(glissDur) * 12.dbamp;
 
   Out.ar(outBus, sig ! 2);
 }).load(s);
