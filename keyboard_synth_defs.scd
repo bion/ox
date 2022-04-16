@@ -1,3 +1,39 @@
+~keyboardInstrumentFreqAmpSubSynth = {
+  arg freq, glissDur, gliss, gate = 1, fade = 1;
+  var env;
+
+  freq = Select.kr(gliss, [freq, freq.lag3(glissDur)]);
+
+  env = fade.lag3(glissDur) *
+  EnvGen.kr(
+    Env([-100.dbamp, 1, -8.dbamp, -100.dbamp], [0.01, 0.3, glissDur], \exp, 2),
+    gate, doneAction: 2);
+
+  [freq, env];
+};
+
+// args: in, distortGain (dB)
+~distortTanh = {
+  arg in, distortGain;
+
+  (in * distortGain.dbamp).tanh * distortGain.neg.dbamp;
+};
+
+// args: in, diss
+~dissonanceFilter = {
+  arg in, diss;
+
+  Array.fill(6*4, {|i|
+    var centerFreq, modFreq, multiplier;
+
+    centerFreq = (36 + (i * 4)).midicps;
+    modFreq = 2.27 * (centerFreq ** 0.477);
+    multiplier = (1.0 - diss) + (diss * SinOsc.kr(modFreq * 0.5, 2pi.rand));
+
+    multiplier * BPF.ar(in, centerFreq, 0.29);
+  }).sum;
+};
+
 SynthDef(\ddsynth, {
   |outBus, freq, amp, envBuf, gate = 1, pPos = 0, pSpread = 0.5, freqMul = 1,
   gliss = 0, fade = 1, glissDur = 0.5
@@ -8,7 +44,6 @@ SynthDef(\ddsynth, {
   diss = 0,
   indexLFOfreq = 0.2, indexLFOlo = 0.5, indexLFOhi = 5,
   vibOnset = 0.01|
-
   var grains, trig, pan, index, harmAmpLFOs, harmAmps,
   vib, rand, vibWidth, vibamp, env, sig;
 
@@ -138,31 +173,50 @@ SynthDef(\organish, {
   Out.ar(outBus, sig.softclip);
 }).load(s);
 
-SynthDef(\clean_cool, {
-  |outBus, freq, amp, diss = 0.3, gate = 1, gliss = 0, fade = 1, glissDur = 0.3|
-  var sig, env;
+// SynthDef(\clean_cool, {
+//   |outBus, freq, amp, diss = 0.3, gate = 1, gliss = 0, fade = 1, glissDur = 0.3|
+//   var sig, env;
 
-  freq = Select.kr(gliss, [freq, freq.lag3(glissDur)]);
+//   freq = Select.kr(gliss, [freq, freq.lag3(glissDur)]);
+
+//   sig = Saw.ar(freq * [0.99123, 1, 1.00123], amp).mean;
+//   sig = MoogFF.ar(sig, freq * 2, 1.4) + (sig * -50.dbamp);
+
+//   sig = Array.fill(6*4, {|i|
+//     var centerFreq, modFreq, multiplier;
+
+//     centerFreq = (36 + (i * 4)).midicps;
+//     modFreq = 2.27 * (centerFreq ** 0.477);
+//     multiplier = (1.0 - diss) + (diss * SinOsc.kr(modFreq * 0.5, 2pi.rand));
+
+//     multiplier * BPF.ar(sig, centerFreq, 0.29);
+//   }).sum;
+
+//   env = EnvGen.kr(
+//     Env([-100.dbamp, 1, -8.dbamp, -100.dbamp], [0.03, 0.3, glissDur], \exp, 2),
+//     gate, doneAction: 2);
+
+//   // sig = (sig * 40.dbamp).tanh * -40.dbamp;
+//   sig = sig * env * fade.lag3(glissDur) * 12.dbamp;
+
+//   Out.ar(outBus, sig ! 2);
+// }).load(s);
+
+// args: distortGain (dB), freq, glissDur, gliss, gate, fade
+SynthDef(\clean_cool, {
+  |outBus, amp|
+  var sig, freq, env;
+  var del1, del2, del3, del4;
+  var transientDur = 0.33;
+
+  #freq, env = SynthDef.wrap(~keyboardInstrumentFreqAmpSubSynth);
 
   sig = Saw.ar(freq * [0.99123, 1, 1.00123], amp).mean;
-  sig = MoogFF.ar(sig, freq * 2, 1.4) + (sig * -50.dbamp);
+  sig = MoogFF.ar(sig, freq * Line.kr(3, 1, transientDur), Line.kr(1, 3, transientDur)) + (sig * -36.dbamp);
 
-  sig = Array.fill(6*4, {|i|
-    var centerFreq, modFreq, multiplier;
-
-    centerFreq = (36 + (i * 4)).midicps;
-    modFreq = 2.27 * (centerFreq ** 0.477);
-    multiplier = (1.0 - diss) + (diss * SinOsc.kr(modFreq * 0.5, 2pi.rand));
-
-    multiplier * BPF.ar(sig, centerFreq, 0.29);
-  }).sum;
-
-  env = EnvGen.kr(
-    Env([-100.dbamp, 1, -8.dbamp, -100.dbamp], [0.03, 0.3, glissDur], \exp, 2),
-    gate, doneAction: 2);
-
-  // sig = (sig * 40.dbamp).tanh * -40.dbamp;
-  sig = sig * env * fade.lag3(glissDur) * 12.dbamp;
+  sig = SynthDef.wrap(~dissonanceFilter, prependArgs: [sig]);
+  sig = SynthDef.wrap(~distortTanh, prependArgs: [sig]);
+  sig = sig * env * 12.dbamp;
 
   Out.ar(outBus, sig ! 2);
 }).load(s);

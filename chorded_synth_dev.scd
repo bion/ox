@@ -34,9 +34,9 @@ p = MIDIClient.sources.detect { |source|
 };
 
 g = KeyboardInstrument(p, (trigger_gliss: (chan: 64)));
-
-c = MIDIClient.sources.detect { |source|
-  source.device == "BCR2000" && source.name == "Port 1";
+MIDIClient.sources
+c = MIDIClient.sources.select { |source|
+  source.device == "BCR2000"
 };
 
 t = MIDIClient.sources.detect { |source|
@@ -45,13 +45,13 @@ t = MIDIClient.sources.detect { |source|
 
 g.keyboardNote = { |amp, midiNoteNum, params|
   Synth(\clean_cool, params ++ [
-    outBus: b,
+    outBus: 2,
     amp: amp,
     freq: midiNoteNum.midicps
   ]);
 };
 
-g.velocityToAmpFunc = { |velocity| velocity.linexp(0, 100, -50.dbamp, 1)};
+g.velocityToAmpFunc = { |velocity| velocity.linexp(0, 100, -60.dbamp, 0.5)};
 g.checkParamsForSynth(\clean_cool);
 
 g.buildControlMap(

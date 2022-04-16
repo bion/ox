@@ -78,7 +78,7 @@ NoteOnEvent {
 
 KeyboardInstrument {
   var <keyboardDevice, <options;
-  var <>velocityToAmpFunc;
+  var <>velocityToAmpFunc = { |velocity| velocity.linexp(0, 127, -60.dbamp, 0) };
   var <controlMap, <paramNameSet, <>keyboardNote, <keyboardSynths, <midiFuncs, <currentParams;
   var <glissControlEnabled = false, <newGlissNoteEvents, <>glissDur = 0.5, <notesDownAtGlissInit, <notesOffDuringGliss;
   var <transitionedSynths, <fadedInSynths, <fadedOutSynths, <normalSynths;
